@@ -33,15 +33,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 const sampleTypeIcons: Record<SampleType, React.ReactNode> = {
   BLOOD: <Droplet className="h-4 w-4" />,
   URINE: <FlaskConical className="h-4 w-4" />,
-  STOOL: <FlaskConical className="h-4 w-4" />,
-  OTHER: <FlaskConical className="h-4 w-4" />,
 };
 
 const sampleTypeColors: Record<SampleType, string> = {
   BLOOD: "bg-red-100 text-red-700 border-red-200",
   URINE: "bg-amber-100 text-amber-700 border-amber-200",
-  STOOL: "bg-orange-100 text-orange-700 border-orange-200",
-  OTHER: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
 export default function TestSearchPage() {
@@ -63,7 +59,7 @@ export default function TestSearchPage() {
   } = useInfiniteTests({
     q: debouncedQuery || undefined,
     sample_type: sampleTypeFilter || undefined,
-    fasting_required: fastingFilter ?? undefined,
+    requires_fasting: fastingFilter ?? undefined,
     limit: 20,
   });
 
@@ -192,10 +188,10 @@ export default function TestSearchPage() {
                               {sampleTypeIcons[test.sample_type]}
                               <span className="ml-1">{test.sample_type}</span>
                             </Badge>
-                            {test.fasting_required && (
+                            {test.requires_fasting && (
                               <Badge variant="outline" className="text-xs">
                                 <Clock className="h-3 w-3 mr-1" />
-                                {test.fasting_hours || 8}h fasting
+                                Fasting required
                               </Badge>
                             )}
                           </div>
