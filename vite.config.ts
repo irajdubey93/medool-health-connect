@@ -49,6 +49,9 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        // Allow large brand assets (GIF loader)
+        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15 MB
+        
         // Cache static assets only
         globPatterns: ["**/*.{js,css,html,ico,png,svg,gif,woff,woff2}"],
         
