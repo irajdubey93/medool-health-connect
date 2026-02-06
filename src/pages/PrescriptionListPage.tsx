@@ -69,13 +69,15 @@ export default function PrescriptionListPage() {
   const { data, isLoading } = usePrescriptions(selectedProfileId);
   const prescriptions = data?.items || [];
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2);
+      .slice(0, 2) || "?";
   };
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
