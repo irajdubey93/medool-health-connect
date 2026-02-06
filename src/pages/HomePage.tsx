@@ -6,15 +6,18 @@
  */
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrders } from "@/hooks/useOrders";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { InstallBanner } from "@/components/ui/install-banner";
+import { OrderStatusBadge } from "@/components/ui/status-badge";
 import {
   FileImage,
   Search,
@@ -22,11 +25,17 @@ import {
   ChevronRight,
   User,
   Sparkles,
+  Building2,
 } from "lucide-react";
+import { format } from "date-fns";
 import medoolLoader from "@/assets/medool-loader.gif";
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { activeProfile, profiles } = useAuth();
+  
+  // Fetch recent orders
+  const { data: ordersData, isLoading: ordersLoading } = useOrders({ limit: 3 });
 
   const getInitials = (name: string) => {
     return name
@@ -163,24 +172,67 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Empty state */}
-        <Card>
-          <CardContent className="flex flex-col items-center py-10 px-6 text-center">
-            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <ClipboardList className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="font-semibold">No orders yet</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">
-              Book your first diagnostic test
-            </p>
-            <Link to="/search">
-              <Button className="bg-gradient-primary">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Start Booking
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {ordersLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <Skeleton className="h-4 w-1/3 mb-2" />
+                  <Skeleton className="h-3 w-2/3 mb-2" />
+                  <Skeleton className="h-5 w-20" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : ordersData && ordersData.items.length > 0 ? (
+          <div className="space-y-3">
+            {ordersData.items.slice(0, 3).map((order) => (
+              <Card
+                key={order.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => navigate(`/orders/${order.id}`)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-sm">#{order.order_number}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(order.created_at), "MMM d, h:mm a")}
+                      </p>
+                    </div>
+                    <OrderStatusBadge status={order.status} />
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Building2 className="h-3 w-3" />
+                    <span>{order.lab.name}</span>
+                    <span className="ml-auto font-medium text-foreground">
+                      ₹{(order.final_price_paise / 100).toFixed(0)}
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center py-10 px-6 text-center">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <ClipboardList className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold">No orders yet</h3>
+              <p className="text-sm text-muted-foreground mt-1 mb-4">
+                Book your first diagnostic test
+              </p>
+              <Link to="/search">
+                <Button className="bg-gradient-primary">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Start Booking
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Spacer for bottom nav */}
