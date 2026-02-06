@@ -5,7 +5,7 @@
 
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useProfile, useCreateProfile, useUpdateProfile } from "@/hooks/useProfiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { MobileLayout } from "@/components/layout/MobileLayout";
@@ -51,6 +51,7 @@ export default function ProfileFormPage() {
     handleSubmit,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
@@ -67,7 +68,10 @@ export default function ProfileFormPage() {
     if (profile) {
       setValue("name", profile.name);
       setValue("gender", profile.gender);
-      setValue("date_of_birth", profile.date_of_birth.split("T")[0]);
+      setValue(
+        "date_of_birth",
+        profile.date_of_birth ? profile.date_of_birth.split("T")[0] : ""
+      );
       setValue("relation", profile.relation);
       setValue("user_type", profile.user_type);
     }
@@ -146,11 +150,19 @@ export default function ProfileFormPage() {
             {/* Date of Birth */}
             <div className="space-y-2">
               <Label htmlFor="dob">Date of Birth *</Label>
-              <Input
-                id="dob"
-                type="date"
-                max={new Date().toISOString().split("T")[0]}
-                {...register("date_of_birth", { required: "Date of birth is required" })}
+              <Controller
+                name="date_of_birth"
+                control={control}
+                rules={{ required: "Date of birth is required" }}
+                render={({ field }) => (
+                  <Input
+                    id="dob"
+                    type="date"
+                    max={new Date().toISOString().split("T")[0]}
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value)}
+                  />
+                )}
               />
               {errors.date_of_birth && (
                 <p className="text-sm text-destructive">{errors.date_of_birth.message}</p>

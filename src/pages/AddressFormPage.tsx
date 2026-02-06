@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { PageLoader } from "@/components/ui/loading-spinner";
 import { MapPin } from "lucide-react";
+import { toast } from "sonner";
 import type { AddressCreate, AddressUpdate } from "@/types/api";
 
 interface FormData {
@@ -80,17 +81,31 @@ export default function AddressFormPage() {
 
   // Get current location
   const handleGetLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setValue("latitude", position.coords.latitude);
-          setValue("longitude", position.coords.longitude);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-        }
-      );
+    if (!navigator.geolocation) {
+      toast.error("Location is not supported on this device/browser.");
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setValue("latitude", position.coords.latitude);
+        setValue("longitude", position.coords.longitude);
+        toast.success("Location captured");
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error("Location permission denied. Please enable it in browser settings.");
+        } else {
+          toast.error("Couldn't get your location. Please type coordinates or try again.");
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
   };
 
   const onSubmit = async (data: FormData) => {
