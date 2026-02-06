@@ -112,13 +112,13 @@ export default function ProfileListPage() {
                 <CardContent className="flex items-center gap-4 p-4">
                   <Avatar className="h-12 w-12 bg-primary/10">
                     <AvatarFallback className="text-primary font-semibold">
-                      {getInitials(profile.name)}
+                      {getInitials(profile.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold truncate">{profile.name}</p>
+                      <p className="font-semibold truncate">{profile.full_name}</p>
                       {profile.is_default && (
                         <Star className="h-4 w-4 text-warning fill-warning" />
                       )}

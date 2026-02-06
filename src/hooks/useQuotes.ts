@@ -10,6 +10,7 @@ import type {
   QuotePreviewRequest,
   QuotePreviewResponse,
   QuoteCreateRequest,
+  QuoteCreateResponse,
   QuoteFinalizeRequest,
 } from "@/types/api";
 import { toast } from "sonner";
@@ -31,10 +32,10 @@ export function useCreateQuote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: QuoteCreateRequest) => api.post<Quote>("/quotes", data),
+    mutationFn: (data: QuoteCreateRequest) => api.post<QuoteCreateResponse>("/quotes", data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
-      analytics.quoteCreated(data.items.length, data.selected_lab_id || "");
+      analytics.quoteCreated(data.lab_options?.length || 0, "");
     },
     onError: (error: Error) => {
       toast.error(error.message);

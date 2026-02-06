@@ -167,10 +167,10 @@ export default function PrescriptionUploadPage() {
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarFallback className="text-xs">
-                          {getInitials(selectedProfile.name)}
+                          {getInitials(selectedProfile.full_name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{selectedProfile.name}</span>
+                      <span>{selectedProfile.full_name}</span>
                     </div>
                   )}
                 </SelectValue>
@@ -181,10 +181,10 @@ export default function PrescriptionUploadPage() {
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarFallback className="text-xs">
-                          {getInitials(profile.name)}
+                          {getInitials(profile.full_name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{profile.name}</span>
+                      <span>{profile.full_name}</span>
                       <span className="text-xs text-muted-foreground">
                         ({profile.relation})
                       </span>

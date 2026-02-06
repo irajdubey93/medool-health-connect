@@ -53,7 +53,7 @@ const statusConfig: Record<
     icon: <CheckCircle className="h-3.5 w-3.5" />,
     className: "bg-success/15 text-success border-success/30",
   },
-  EXTRACTION_FAILED: {
+  FAILED: {
     label: "Failed",
     icon: <XCircle className="h-3.5 w-3.5" />,
     className: "bg-destructive/15 text-destructive border-destructive/30",
@@ -102,10 +102,10 @@ export default function PrescriptionListPage() {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-5 w-5">
                       <AvatarFallback className="text-xs">
-                        {getInitials(selectedProfile.name)}
+                        {getInitials(selectedProfile.full_name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span>{selectedProfile.name}</span>
+                    <span>{selectedProfile.full_name}</span>
                   </div>
                 )}
               </SelectValue>
@@ -116,10 +116,10 @@ export default function PrescriptionListPage() {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-5 w-5">
                       <AvatarFallback className="text-xs">
-                        {getInitials(profile.name)}
+                        {getInitials(profile.full_name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span>{profile.name}</span>
+                    <span>{profile.full_name}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -136,7 +136,7 @@ export default function PrescriptionListPage() {
         {prescriptions.length > 0 ? (
           <div className="space-y-3">
             {prescriptions.map((prescription) => {
-              const status = statusConfig[prescription.status];
+              const status = statusConfig[prescription.status] || statusConfig.UPLOADED;
               return (
                 <Card
                   key={prescription.id}
@@ -146,15 +146,7 @@ export default function PrescriptionListPage() {
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="h-16 w-16 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {prescription.file_type === "IMAGE" ? (
-                          <img
-                            src={prescription.file_url}
-                            alt="Prescription"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <FileText className="h-8 w-8 text-muted-foreground" />
-                        )}
+                        <FileText className="h-8 w-8 text-muted-foreground" />
                       </div>
 
                       <div className="flex-1 min-w-0">

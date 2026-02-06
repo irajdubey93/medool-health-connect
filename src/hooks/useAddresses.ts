@@ -56,12 +56,13 @@ export function useUpdateAddress() {
   });
 }
 
+// Backend uses PATCH with is_default: true to set default
 export function useSetDefaultAddress() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (addressId: string) =>
-      api.post<Address>(`/addresses/${addressId}/set-default`),
+      api.patch<Address>(`/addresses/${addressId}`, { is_default: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADDRESSES_QUERY_KEY });
       toast.success("Default address updated");

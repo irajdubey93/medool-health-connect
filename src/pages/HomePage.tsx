@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import medoolLoader from "@/assets/medool-loader.gif";
+import type { OrderStatus } from "@/types/api";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -68,11 +69,11 @@ export default function HomePage() {
               <CardContent className="flex items-center gap-4 p-4">
                 <Avatar className="h-12 w-12 bg-primary/10">
                   <AvatarFallback className="text-primary font-semibold">
-                    {getInitials(activeProfile.name)}
+                    {getInitials(activeProfile.full_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{activeProfile.name}</p>
+                  <p className="font-semibold truncate">{activeProfile.full_name}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge
                       variant="outline"
@@ -197,18 +198,18 @@ export default function HomePage() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="font-semibold text-sm">#{order.order_number}</p>
+                      <p className="font-semibold text-sm">Order</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(order.created_at), "MMM d, h:mm a")}
                       </p>
                     </div>
-                    <OrderStatusBadge status={order.status} />
+                    <OrderStatusBadge status={order.status as OrderStatus} />
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Building2 className="h-3 w-3" />
-                    <span>{order.lab.name}</span>
+                    <span>Lab ID: {order.selected_lab_id?.slice(0, 8)}...</span>
                     <span className="ml-auto font-medium text-foreground">
-                      ₹{(order.final_price_paise / 100).toFixed(0)}
+                      ₹{(order.total_payable_paise / 100).toFixed(0)}
                     </span>
                     <ChevronRight className="h-4 w-4" />
                   </div>

@@ -26,13 +26,12 @@ import type { AddressCreate, AddressUpdate } from "@/types/api";
 
 interface FormData {
   label: string;
-  address_line: string;
+  address_line1: string;
+  address_line2: string;
   landmark: string;
-  city: string;
-  state: string;
   pincode: string;
-  latitude: number;
-  longitude: number;
+  lat: number;
+  lng: number;
 }
 
 const LABEL_OPTIONS = ["Home", "Office", "Work", "Other"];
@@ -55,27 +54,25 @@ export default function AddressFormPage() {
   } = useForm<FormData>({
     defaultValues: {
       label: "Home",
-      address_line: "",
+      address_line1: "",
+      address_line2: "",
       landmark: "",
-      city: "Dehradun",
-      state: "Uttarakhand",
       pincode: "",
-      latitude: 30.3165,
-      longitude: 78.0322,
+      lat: 30.3165,
+      lng: 78.0322,
     },
   });
 
   // Populate form when editing
   React.useEffect(() => {
     if (address) {
-      setValue("label", address.label);
-      setValue("address_line", address.address_line);
+      setValue("label", address.label || "Home");
+      setValue("address_line1", address.address_line1);
+      setValue("address_line2", address.address_line2 || "");
       setValue("landmark", address.landmark || "");
-      setValue("city", address.city);
-      setValue("state", address.state);
-      setValue("pincode", address.pincode);
-      setValue("latitude", address.latitude);
-      setValue("longitude", address.longitude);
+      setValue("pincode", address.pincode || "");
+      setValue("lat", address.lat);
+      setValue("lng", address.lng);
     }
   }, [address, setValue]);
 
@@ -88,8 +85,8 @@ export default function AddressFormPage() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setValue("latitude", position.coords.latitude);
-        setValue("longitude", position.coords.longitude);
+        setValue("lat", position.coords.latitude);
+        setValue("lng", position.coords.longitude);
         toast.success("Location captured");
       },
       (error) => {
@@ -112,25 +109,23 @@ export default function AddressFormPage() {
     if (isEditing && addressId) {
       const updateData: AddressUpdate = {
         label: data.label,
-        address_line: data.address_line,
+        address_line1: data.address_line1,
+        address_line2: data.address_line2 || undefined,
         landmark: data.landmark || undefined,
-        city: data.city,
-        state: data.state,
-        pincode: data.pincode,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        pincode: data.pincode || undefined,
+        lat: data.lat,
+        lng: data.lng,
       };
       await updateMutation.mutateAsync({ id: addressId, data: updateData });
     } else {
       const createData: AddressCreate = {
         label: data.label,
-        address_line: data.address_line,
+        address_line1: data.address_line1,
+        address_line2: data.address_line2 || undefined,
         landmark: data.landmark || undefined,
-        city: data.city,
-        state: data.state,
-        pincode: data.pincode,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        pincode: data.pincode || undefined,
+        lat: data.lat,
+        lng: data.lng,
       };
       await createMutation.mutateAsync(createData);
     }
@@ -155,7 +150,7 @@ export default function AddressFormPage() {
           <CardContent className="space-y-4">
             {/* Label */}
             <div className="space-y-2">
-              <Label>Label *</Label>
+              <Label>Label</Label>
               <Select
                 value={watch("label")}
                 onValueChange={(value) => setValue("label", value)}
@@ -173,17 +168,27 @@ export default function AddressFormPage() {
               </Select>
             </div>
 
-            {/* Address Line */}
+            {/* Address Line 1 */}
             <div className="space-y-2">
-              <Label htmlFor="address_line">Address *</Label>
+              <Label htmlFor="address_line1">Address Line 1 *</Label>
               <Input
-                id="address_line"
+                id="address_line1"
                 placeholder="House/Flat No., Building, Street"
-                {...register("address_line", { required: "Address is required" })}
+                {...register("address_line1", { required: "Address is required" })}
               />
-              {errors.address_line && (
-                <p className="text-sm text-destructive">{errors.address_line.message}</p>
+              {errors.address_line1 && (
+                <p className="text-sm text-destructive">{errors.address_line1.message}</p>
               )}
+            </div>
+
+            {/* Address Line 2 */}
+            <div className="space-y-2">
+              <Label htmlFor="address_line2">Address Line 2</Label>
+              <Input
+                id="address_line2"
+                placeholder="Area, Locality"
+                {...register("address_line2")}
+              />
             </div>
 
             {/* Landmark */}
@@ -196,35 +201,14 @@ export default function AddressFormPage() {
               />
             </div>
 
-            {/* City & State */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  placeholder="City"
-                  {...register("city", { required: "City is required" })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
-                <Input
-                  id="state"
-                  placeholder="State"
-                  {...register("state", { required: "State is required" })}
-                />
-              </div>
-            </div>
-
             {/* Pincode */}
             <div className="space-y-2">
-              <Label htmlFor="pincode">Pincode *</Label>
+              <Label htmlFor="pincode">Pincode</Label>
               <Input
                 id="pincode"
                 placeholder="6-digit pincode"
                 maxLength={6}
                 {...register("pincode", {
-                  required: "Pincode is required",
                   pattern: {
                     value: /^[1-9][0-9]{5}$/,
                     message: "Enter a valid 6-digit pincode",
@@ -238,20 +222,20 @@ export default function AddressFormPage() {
 
             {/* Location */}
             <div className="space-y-2">
-              <Label>Location Coordinates</Label>
+              <Label>Location Coordinates *</Label>
               <div className="flex gap-2">
                 <Input
                   placeholder="Latitude"
                   type="number"
                   step="any"
-                  {...register("latitude", { valueAsNumber: true })}
+                  {...register("lat", { valueAsNumber: true, required: true })}
                   className="flex-1"
                 />
                 <Input
                   placeholder="Longitude"
                   type="number"
                   step="any"
-                  {...register("longitude", { valueAsNumber: true })}
+                  {...register("lng", { valueAsNumber: true, required: true })}
                   className="flex-1"
                 />
                 <Button

@@ -27,15 +27,11 @@ import type { SampleType } from "@/types/api";
 const sampleTypeIcons: Record<SampleType, React.ReactNode> = {
   BLOOD: <Droplet className="h-4 w-4" />,
   URINE: <FlaskConical className="h-4 w-4" />,
-  STOOL: <FlaskConical className="h-4 w-4" />,
-  OTHER: <FlaskConical className="h-4 w-4" />,
 };
 
 const sampleTypeColors: Record<SampleType, string> = {
   BLOOD: "bg-red-100 text-red-700",
   URINE: "bg-amber-100 text-amber-700",
-  STOOL: "bg-orange-100 text-orange-700",
-  OTHER: "bg-gray-100 text-gray-700",
 };
 
 export default function CartPage() {
@@ -77,7 +73,7 @@ export default function CartPage() {
               <User className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">{activeProfile.name}</p>
+              <p className="text-sm font-medium">{activeProfile.full_name}</p>
               <p className="text-xs text-muted-foreground">
                 {activeProfile.user_type} • {activeProfile.relation}
               </p>
@@ -97,10 +93,10 @@ export default function CartPage() {
                   <div
                     className={cn(
                       "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0",
-                      sampleTypeColors[item.test.sample_type]
+                      sampleTypeColors[item.test.sample_type] || "bg-gray-100 text-gray-700"
                     )}
                   >
-                    {sampleTypeIcons[item.test.sample_type]}
+                    {sampleTypeIcons[item.test.sample_type] || <FlaskConical className="h-4 w-4" />}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -111,7 +107,7 @@ export default function CartPage() {
                       <Badge variant="outline" className="text-xs">
                         {item.test.sample_type}
                       </Badge>
-                      {item.test.fasting_required && (
+                      {item.test.requires_fasting && (
                         <Badge variant="outline" className="text-xs">
                           <Clock className="h-3 w-3 mr-1" />
                           Fasting
