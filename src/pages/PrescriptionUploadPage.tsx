@@ -54,13 +54,15 @@ export default function PrescriptionUploadPage() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2);
+      .slice(0, 2) || "?";
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
