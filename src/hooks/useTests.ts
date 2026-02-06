@@ -5,6 +5,7 @@
 
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
+import { normalizePaginatedResponse } from "@/lib/api-utils";
 import type { Test, TestSearchParams, PaginatedResponse } from "@/types/api";
 
 export const TESTS_QUERY_KEY = ["tests"];
@@ -12,8 +13,10 @@ export const TESTS_QUERY_KEY = ["tests"];
 export function useSearchTests(params: TestSearchParams) {
   return useQuery({
     queryKey: [...TESTS_QUERY_KEY, "search", params],
-    queryFn: () =>
-      api.get<PaginatedResponse<Test>>("/tests", params as Record<string, unknown>),
+    queryFn: async () => {
+      const response = await api.get<unknown>("/tests", params as Record<string, unknown>);
+      return normalizePaginatedResponse<Test>(response, params);
+    },
     enabled: !params.q || params.q.length >= 2,
     staleTime: 5 * 60 * 1000, // 5 minutes - can be stale-while-revalidate
   });
@@ -22,12 +25,15 @@ export function useSearchTests(params: TestSearchParams) {
 export function useInfiniteTests(params: Omit<TestSearchParams, "offset">) {
   return useInfiniteQuery({
     queryKey: [...TESTS_QUERY_KEY, "infinite", params],
-    queryFn: ({ pageParam = 0 }) =>
-      api.get<PaginatedResponse<Test>>("/tests", {
+    queryFn: async ({ pageParam = 0 }) => {
+      const queryParams = {
         ...params,
         offset: pageParam,
         limit: params.limit || 20,
-      } as Record<string, unknown>),
+      };
+      const response = await api.get<unknown>("/tests", queryParams as Record<string, unknown>);
+      return normalizePaginatedResponse<Test>(response, queryParams);
+    },
     getNextPageParam: (lastPage) => {
       if (!lastPage.has_more) return undefined;
       return lastPage.offset + lastPage.limit;
