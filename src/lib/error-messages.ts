@@ -37,10 +37,33 @@ export const ERROR_MESSAGES: ErrorMessageMap = {
   [ERROR_CODES.ORDER_NOT_CANCELLABLE]: "This order cannot be cancelled.",
 
   // Generic
-  [ERROR_CODES.VALIDATION_ERROR]: "Please check your input and try again.",
+  [ERROR_CODES.VALIDATION_ERROR]: "Validation error", // Will be replaced with details if available
   [ERROR_CODES.FORBIDDEN]: "You don't have permission to do this.",
   [ERROR_CODES.INTERNAL_ERROR]: "Something went wrong. Please try again.",
 };
+
+/**
+ * Format validation error with field details
+ */
+export function formatValidationError(
+  details: Record<string, string[]> | undefined
+): string {
+  if (!details || Object.keys(details).length === 0) {
+    return "Please check your input and try again.";
+  }
+  
+  // Get the first error message from details
+  const firstField = Object.keys(details)[0];
+  const firstError = details[firstField]?.[0];
+  
+  if (firstError) {
+    // Capitalize field name and format nicely
+    const fieldName = firstField.replace(/_/g, " ");
+    return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}: ${firstError}`;
+  }
+  
+  return "Please check your input and try again.";
+}
 
 /**
  * Get user-friendly error message from error code
