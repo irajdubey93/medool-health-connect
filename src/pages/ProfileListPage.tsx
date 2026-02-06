@@ -42,14 +42,22 @@ export default function ProfileListPage() {
   
   const [deleteProfileId, setDeleteProfileId] = React.useState<string | null>(null);
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2);
+      .slice(0, 2) || "?";
   };
+
+  // Filter out invalid profiles
+  const validProfiles = React.useMemo(
+    () => (profiles ?? []).filter((p): p is Profile => p != null && typeof p.id === "string"),
+    [profiles]
+  );
 
   const handleSetDefault = (profileId: string) => {
     setDefaultMutation.mutate(profileId);
@@ -89,9 +97,9 @@ export default function ProfileListPage() {
         </Link>
 
         {/* Profile list */}
-        {profiles && profiles.length > 0 ? (
+        {validProfiles.length > 0 ? (
           <div className="space-y-3">
-            {profiles.map((profile) => (
+            {validProfiles.map((profile) => (
               <Card
                 key={profile.id}
                 className={`cursor-pointer transition-all ${
