@@ -68,7 +68,9 @@ export default function TestSearchPage() {
   });
 
   const tests = useMemo(() => {
-    return data?.pages.flatMap((page) => page.items) ?? [];
+    const allItems = data?.pages.flatMap((page) => page.items) ?? [];
+    // Filter out any undefined items for safety
+    return allItems.filter((test): test is Test => test != null && typeof test.id === "string");
   }, [data]);
 
   const handleAddToCart = (test: Test, e: React.MouseEvent) => {
