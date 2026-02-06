@@ -96,7 +96,7 @@ export default function HomePage() {
         )}
 
         {/* No profile prompt */}
-        {!activeProfile && profiles.length === 0 && (
+        {!activeProfile && (!profiles || profiles.length === 0) && (
           <Link to="/profile/new" className="block">
             <Card className="bg-white/95 backdrop-blur">
               <CardContent className="flex items-center gap-4 p-4">
@@ -186,7 +186,7 @@ export default function HomePage() {
               </Card>
             ))}
           </div>
-        ) : ordersData && ordersData.items.length > 0 ? (
+        ) : ordersData?.items && ordersData.items.length > 0 ? (
           <div className="space-y-3">
             {ordersData.items.slice(0, 3).map((order) => (
               <Card
