@@ -1,6 +1,6 @@
 /**
  * Checkout Page
- * Multi-step quote and order flow
+ * Simplified multi-step quote and order flow
  */
 
 import React, { useState, useEffect } from "react";
@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { PageLoader, LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -36,7 +35,7 @@ import {
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Address, LabPricing, Quote, Slot } from "@/types/api";
+import type { Slot, LabOptionSummary } from "@/types/api";
 
 type Step = "review" | "address" | "slot" | "labs" | "confirm";
 
@@ -56,7 +55,8 @@ export default function CheckoutPage() {
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [couponCode, setCouponCode] = useState("");
   const [selectedLabId, setSelectedLabId] = useState<string>("");
-  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoteId, setQuoteId] = useState<string | null>(null);
+  const [finalQuote, setFinalQuote] = useState<any>(null);
 
   const quotePreviewMutation = useQuotePreview();
   const createQuoteMutation = useCreateQuote();
@@ -77,9 +77,14 @@ export default function CheckoutPage() {
   }, [addresses, selectedAddressId]);
 
   const selectedAddress = addresses?.find((a) => a.id === selectedAddressId);
-  const testIds = items.map((item) => item.test_id);
 
   const stepIndex = STEPS.indexOf(step);
+
+  // Convert cart items to quote format
+  const quoteItems = items.map((item) => ({
+    test_id: item.test_id,
+    quantity: item.quantity || 1,
+  }));
 
   const handleNext = async () => {
     if (step === "review") {
@@ -92,7 +97,7 @@ export default function CheckoutPage() {
         await quotePreviewMutation.mutateAsync({
           profile_id: activeProfile!.id,
           address_id: selectedAddressId,
-          test_ids: testIds,
+          items: quoteItems,
           slot_start_at: selectedSlot || undefined,
           coupon_code: couponCode || undefined,
         });
@@ -106,18 +111,19 @@ export default function CheckoutPage() {
         const newQuote = await createQuoteMutation.mutateAsync({
           profile_id: activeProfile!.id,
           address_id: selectedAddressId,
-          test_ids: testIds,
-          lab_id: selectedLabId,
-          slot_start_at: selectedSlot,
+          items: quoteItems,
+          slot_start_at: selectedSlot || undefined,
           coupon_code: couponCode || undefined,
         });
 
-        const finalizedQuote = await finalizeQuoteMutation.mutateAsync({
-          quoteId: newQuote.id,
-          data: { lab_id: selectedLabId },
+        setQuoteId(newQuote.quote_id);
+
+        const finalized = await finalizeQuoteMutation.mutateAsync({
+          quoteId: newQuote.quote_id,
+          data: { selected_lab_id: selectedLabId },
         });
 
-        setQuote(finalizedQuote);
+        setFinalQuote(finalized);
         setStep("confirm");
       } catch {
         // Error handled by mutation
@@ -133,14 +139,14 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!quote) return;
+    if (!quoteId) return;
 
     try {
-      const order = await createOrderMutation.mutateAsync({
-        quote_id: quote.id,
+      const orderResponse = await createOrderMutation.mutateAsync({
+        quote_id: quoteId,
       });
       clearCart();
-      navigate(`/orders/${order.id}`, { replace: true });
+      navigate(`/orders/${orderResponse.order_id}`, { replace: true });
     } catch {
       // Error handled by mutation
     }
@@ -203,7 +209,7 @@ export default function CheckoutPage() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{activeProfile.name}</p>
+                      <p className="font-medium">{activeProfile.full_name}</p>
                       <p className="text-sm text-muted-foreground">
                         {activeProfile.user_type} • {activeProfile.relation}
                       </p>
@@ -272,7 +278,7 @@ export default function CheckoutPage() {
                         <RadioGroupItem value={address.id} className="mt-1" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{address.label}</span>
+                            <span className="font-medium">{address.label || "Address"}</span>
                             {address.is_default && (
                               <Badge variant="secondary" className="text-xs">
                                 Default
@@ -280,11 +286,13 @@ export default function CheckoutPage() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {address.address_line}
+                            {address.address_line1}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {address.city} - {address.pincode}
-                          </p>
+                          {address.pincode && (
+                            <p className="text-xs text-muted-foreground">
+                              Pincode: {address.pincode}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -351,7 +359,7 @@ export default function CheckoutPage() {
                     </div>
                   ) : slots && slots.length > 0 ? (
                     <div className="grid grid-cols-3 gap-2">
-                      {slots.map((slot) => {
+                      {slots.map((slot: Slot) => {
                         const isAvailable = slot.available > 0;
                         const startTime = format(new Date(slot.start_at), "h:mm a");
                         return (
@@ -421,21 +429,21 @@ export default function CheckoutPage() {
                     onValueChange={setSelectedLabId}
                     className="space-y-3"
                   >
-                    {labOptions.map((labPricing, index) => (
+                    {labOptions.map((labOption: LabOptionSummary, index: number) => (
                       <div
-                        key={labPricing.lab.id}
+                        key={labOption.lab_id}
                         className={cn(
                           "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                          selectedLabId === labPricing.lab.id
+                          selectedLabId === labOption.lab_id
                             ? "border-primary bg-primary/5"
                             : "hover:border-primary/50"
                         )}
-                        onClick={() => setSelectedLabId(labPricing.lab.id)}
+                        onClick={() => setSelectedLabId(labOption.lab_id)}
                       >
-                        <RadioGroupItem value={labPricing.lab.id} className="mt-1" />
+                        <RadioGroupItem value={labOption.lab_id} className="mt-1" />
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">{labPricing.lab.name}</span>
+                            <span className="font-medium">{labOption.lab_name}</span>
                             {index === 0 && (
                               <Badge className="bg-success text-success-foreground text-xs">
                                 Best Price
@@ -443,20 +451,15 @@ export default function CheckoutPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {labPricing.lab.address}
+                            {labOption.distance_km?.toFixed(1)} km away
                           </p>
                           <div className="flex items-center gap-2 mt-2">
-                            {labPricing.discount_paise > 0 && (
-                              <span className="text-xs text-muted-foreground line-through">
-                                {formatPrice(labPricing.total_mrp_paise)}
-                              </span>
-                            )}
                             <span className="font-semibold text-primary">
-                              {formatPrice(labPricing.total_price_paise)}
+                              {formatPrice(labOption.total_payable_paise)}
                             </span>
-                            {labPricing.discount_paise > 0 && (
+                            {labOption.total_discount_paise > 0 && (
                               <Badge variant="secondary" className="text-xs">
-                                Save {formatPrice(labPricing.discount_paise)}
+                                Save {formatPrice(labOption.total_discount_paise)}
                               </Badge>
                             )}
                           </div>
@@ -477,7 +480,7 @@ export default function CheckoutPage() {
           )}
 
           {/* Step 5: Confirm */}
-          {step === "confirm" && quote && (
+          {step === "confirm" && finalQuote && (
             <>
               <Card className="border-primary">
                 <CardHeader className="pb-2">
@@ -488,25 +491,19 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span>Tests ({quote.items.length})</span>
-                    <span>{formatPrice(quote.total_mrp_paise)}</span>
+                    <span>Tests ({finalQuote.items?.length || items.length})</span>
+                    <span>{formatPrice(finalQuote.tests_subtotal_paise || 0)}</span>
                   </div>
-                  {quote.discount_paise > 0 && (
+                  {finalQuote.total_discount_paise > 0 && (
                     <div className="flex justify-between text-sm text-success">
-                      <span>Lab Discount</span>
-                      <span>-{formatPrice(quote.discount_paise)}</span>
-                    </div>
-                  )}
-                  {quote.coupon_discount_paise > 0 && (
-                    <div className="flex justify-between text-sm text-success">
-                      <span>Coupon Discount</span>
-                      <span>-{formatPrice(quote.coupon_discount_paise)}</span>
+                      <span>Discount</span>
+                      <span>-{formatPrice(finalQuote.total_discount_paise)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold pt-2 border-t">
                     <span>Total (COD)</span>
                     <span className="text-lg text-primary">
-                      {formatPrice(quote.final_price_paise)}
+                      {formatPrice(finalQuote.total_payable_paise)}
                     </span>
                   </div>
                 </CardContent>
@@ -517,7 +514,7 @@ export default function CheckoutPage() {
                   <div className="flex items-start gap-3">
                     <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium">{activeProfile.name}</p>
+                      <p className="text-sm font-medium">{activeProfile.full_name}</p>
                       <p className="text-xs text-muted-foreground">
                         {activeProfile.user_type}
                       </p>
@@ -525,17 +522,13 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex items-start gap-3">
                     <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <p className="text-sm">{selectedAddress?.address_line}</p>
+                    <p className="text-sm">{selectedAddress?.address_line1}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <p className="text-sm">
-                      {format(new Date(selectedSlot), "EEE, MMM d 'at' h:mm a")}
+                      {selectedSlot && format(new Date(selectedSlot), "EEE, MMM d 'at' h:mm a")}
                     </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <p className="text-sm">{quote.selected_lab?.name}</p>
                   </div>
                 </CardContent>
               </Card>

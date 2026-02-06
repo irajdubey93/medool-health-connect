@@ -20,13 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { OrderStatusBadge, SlotStatusBadge } from "@/components/ui/status-badge";
+import { OrderStatusBadge } from "@/components/ui/status-badge";
 import {
   ClipboardList,
   ChevronRight,
   Building2,
   Calendar,
-  User,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { OrderStatus } from "@/types/api";
@@ -91,7 +90,7 @@ export default function OrdersListPage() {
                 <SelectItem value="all">All Profiles</SelectItem>
                 {profiles.map((profile) => (
                   <SelectItem key={profile.id} value={profile.id}>
-                    {profile.name}
+                    {profile.full_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -121,45 +120,30 @@ export default function OrdersListPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-semibold">#{order.order_number}</p>
+                      <p className="font-semibold">Order</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {format(new Date(order.created_at), "MMM d, yyyy 'at' h:mm a")}
                       </p>
                     </div>
-                    <OrderStatusBadge status={order.status} />
+                    <OrderStatusBadge status={order.status as OrderStatus} />
                   </div>
 
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span>{order.profile.name}</span>
-                      <Badge variant="outline" className="text-xs ml-auto">
-                        {order.profile.user_type}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Building2 className="h-4 w-4" />
-                      <span>{order.lab.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <SlotStatusBadge
-                        slotTime={format(new Date(order.slot_start_at), "MMM d, h:mm a")}
-                        isConfirmed={order.slot_confirmed}
-                        orderStatus={order.status}
-                      />
+                      <span>Lab: {order.selected_lab_id?.slice(0, 8)}...</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mt-3 pt-3 border-t">
                     <div>
                       <span className="text-sm text-muted-foreground">
-                        {order.items.length} test(s)
+                        {order.pricing_user_type}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-primary">
-                        {formatPrice(order.final_price_paise)}
+                        {formatPrice(order.total_payable_paise)}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>

@@ -1,6 +1,6 @@
 /**
  * Order Detail Page
- * Full order information with timeline, rider status, and reports
+ * Full order information with timeline and reports
  */
 
 import React, { useState } from "react";
@@ -13,11 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { PageLoader, LoadingSpinner } from "@/components/ui/loading-spinner";
-import {
-  OrderStatusBadge,
-  RiderStatusBadge,
-  SlotStatusBadge,
-} from "@/components/ui/status-badge";
+import { OrderStatusBadge } from "@/components/ui/status-badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,19 +25,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  User,
-  MapPin,
   Calendar,
   Building2,
   FileText,
   Download,
   XCircle,
-  Phone,
   CreditCard,
   Clock,
   CheckCircle,
   AlertCircle,
-  Bike,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -100,9 +92,9 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handleDownloadReport = (reportId: string) => {
+  const handleDownloadReport = (attachmentId: string) => {
     if (!orderId) return;
-    reportDownloadMutation.mutate({ orderId, reportId });
+    reportDownloadMutation.mutate({ orderId, reportId: attachmentId });
   };
 
   const canCancel = order && (
@@ -132,12 +124,10 @@ export default function OrderDetailPage() {
   const isTerminal = order.status === "CANCELLED" || order.status === "OPS_REJECTED";
 
   return (
-    <MobileLayout title={`Order #${order.order_number}`} showBack showNav={false}>
+    <MobileLayout title="Order Details" showBack showNav={false}>
       <div className="p-4 space-y-4 pb-24">
         {/* Status header */}
-        <Card className={cn(
-          isTerminal && "border-destructive/50"
-        )}>
+        <Card className={cn(isTerminal && "border-destructive/50")}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <OrderStatusBadge status={order.status} />
@@ -146,12 +136,12 @@ export default function OrderDetailPage() {
               </span>
             </div>
 
-            {/* Rejection/Cancellation reason */}
-            {order.status === "OPS_REJECTED" && order.rejection_reason && (
+            {/* Cancellation reason from ops_task */}
+            {order.status === "OPS_REJECTED" && order.ops_task?.rejection_reason && (
               <div className="mt-3 p-3 bg-destructive/10 rounded-lg">
                 <p className="text-sm text-destructive flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Reason: {order.rejection_reason}</span>
+                  <span>Reason: {order.ops_task.rejection_reason}</span>
                 </p>
               </div>
             )}
@@ -225,65 +215,29 @@ export default function OrderDetailPage() {
           </Card>
         )}
 
-        {/* Rider status */}
-        {order.rider_assignment && (
+        {/* Slot info */}
+        {order.slot_start_at && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Bike className="h-4 w-4" />
-                Rider Status
+                <Calendar className="h-4 w-4" />
+                Collection Slot
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RiderStatusBadge
-                status={order.rider_assignment.status}
-                riderName={order.rider_assignment.rider_name}
-              />
+              <p className="text-sm">
+                {format(new Date(order.slot_start_at), "EEE, MMM d 'at' h:mm a")}
+              </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Slot info */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Collection Slot
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SlotStatusBadge
-              slotTime={format(new Date(order.slot_start_at), "EEE, MMM d 'at' h:mm a")}
-              isConfirmed={order.slot_confirmed}
-              orderStatus={order.status}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Patient & Address */}
+        {/* Lab info */}
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{order.profile.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {order.profile.user_type} • {order.profile.relation}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <div>
-                <p className="text-sm">{order.address.address_line}</p>
-                <p className="text-xs text-muted-foreground">
-                  {order.address.city} - {order.address.pincode}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
               <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <p className="text-sm">{order.lab.name}</p>
+              <p className="text-sm">Lab ID: {order.selected_lab_id}</p>
             </div>
           </CardContent>
         </Card>
@@ -299,9 +253,9 @@ export default function OrderDetailPage() {
                 key={item.id}
                 className="flex items-center justify-between py-2 border-b last:border-0"
               >
-                <span className="text-sm">{item.test.name}</span>
+                <span className="text-sm">Test ID: {item.test_id?.slice(0, 8)}...</span>
                 <span className="text-sm font-medium">
-                  {formatPrice(item.price_paise)}
+                  {formatPrice(item.unit_price_paise)}
                 </span>
               </div>
             ))}
@@ -319,41 +273,35 @@ export default function OrderDetailPage() {
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>{formatPrice(order.total_mrp_paise)}</span>
+              <span>{formatPrice(order.tests_subtotal_paise)}</span>
             </div>
-            {order.discount_paise > 0 && (
-              <div className="flex justify-between text-sm text-success">
-                <span>Discount</span>
-                <span>-{formatPrice(order.discount_paise)}</span>
+            {order.total_fees_paise > 0 && (
+              <div className="flex justify-between text-sm">
+                <span>Fees</span>
+                <span>{formatPrice(order.total_fees_paise)}</span>
               </div>
             )}
-            {order.coupon_discount_paise > 0 && (
+            {order.total_discount_paise > 0 && (
               <div className="flex justify-between text-sm text-success">
-                <span>Coupon</span>
-                <span>-{formatPrice(order.coupon_discount_paise)}</span>
+                <span>Discount</span>
+                <span>-{formatPrice(order.total_discount_paise)}</span>
+              </div>
+            )}
+            {order.total_cashback_paise > 0 && (
+              <div className="flex justify-between text-sm text-success">
+                <span>Cashback</span>
+                <span>-{formatPrice(order.total_cashback_paise)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold pt-2 border-t">
               <span>Total</span>
-              <span className="text-primary">{formatPrice(order.final_price_paise)}</span>
+              <span className="text-primary">{formatPrice(order.total_payable_paise)}</span>
             </div>
-            {order.cod_collected_paise > 0 && (
-              <div className="flex justify-between text-sm text-muted-foreground pt-2">
-                <span>Collected</span>
-                <span>{formatPrice(order.cod_collected_paise)}</span>
-              </div>
-            )}
-            {order.cod_outstanding_paise > 0 && (
-              <div className="flex justify-between text-sm font-medium">
-                <span>Outstanding</span>
-                <span className="text-warning">{formatPrice(order.cod_outstanding_paise)}</span>
-              </div>
-            )}
           </CardContent>
         </Card>
 
         {/* Reports */}
-        {order.reports.length > 0 && (
+        {order.reports && order.reports.length > 0 && (
           <Card className="border-success/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2 text-success">
@@ -372,7 +320,7 @@ export default function OrderDetailPage() {
                     <div>
                       <p className="text-sm font-medium">Report {index + 1}</p>
                       <p className="text-xs text-muted-foreground">
-                        {report.file_type} • {(report.file_size_bytes / 1024).toFixed(0)} KB
+                        {report.report_type}
                         {report.is_verified && (
                           <Badge variant="outline" className="ml-2 text-xs text-success">
                             Verified
@@ -384,7 +332,7 @@ export default function OrderDetailPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDownloadReport(report.id)}
+                    onClick={() => handleDownloadReport(report.attachment_id)}
                     disabled={reportDownloadMutation.isPending}
                   >
                     {reportDownloadMutation.isPending ? (

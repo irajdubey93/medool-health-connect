@@ -20,6 +20,8 @@ import medoolLoader from "@/assets/medool-loader.gif";
 
 type Step = "phone" | "otp";
 
+const DEFAULT_COOLDOWN = 60; // seconds
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { requestOTP, verifyOTP, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -70,8 +72,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await requestOTP(`+91${phone}`);
-      setCooldown(response.cooldown_seconds || 60);
+      await requestOTP(`+91${phone}`);
+      setCooldown(DEFAULT_COOLDOWN);
       setStep("otp");
       toast.success("OTP sent to your phone");
     } catch (err) {
@@ -112,8 +114,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await requestOTP(`+91${phone}`);
-      setCooldown(response.cooldown_seconds || 60);
+      await requestOTP(`+91${phone}`);
+      setCooldown(DEFAULT_COOLDOWN);
       toast.success("OTP resent");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to resend OTP";

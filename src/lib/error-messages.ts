@@ -15,12 +15,15 @@ export const ERROR_MESSAGES: ErrorMessageMap = {
   [ERROR_CODES.TOO_MANY_ATTEMPTS]: "Too many failed attempts. Request a new OTP.",
   [ERROR_CODES.OTP_COOLDOWN]: "Please wait before requesting another OTP.",
   [ERROR_CODES.RATE_LIMIT]: "Too many requests. Please wait a moment.",
+  [ERROR_CODES.RATE_LIMITED]: "Too many requests. Please wait a moment.",
   [ERROR_CODES.TOKEN_EXPIRED]: "Session expired. Refreshing...",
   [ERROR_CODES.INVALID_REFRESH_TOKEN]: "Session expired. Please log in again.",
+  [ERROR_CODES.UNAUTHORIZED]: "Please log in again.",
 
   // Profile & Address
   [ERROR_CODES.USER_TYPE_LOCKED]: "Cannot change patient type after booking.",
   [ERROR_CODES.PROFILE_INACTIVE]: "This profile is no longer active.",
+  [ERROR_CODES.DUPLICATE_SELF]: "Only one Self profile allowed.",
   [ERROR_CODES.NOT_FOUND]: "Not found.",
 
   // Quote & Order

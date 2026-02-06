@@ -27,7 +27,7 @@ import { analytics } from "@/lib/analytics";
 import type { ProfileCreate, ProfileUpdate, Gender, Relation, UserType } from "@/types/api";
 
 interface FormData {
-  name: string;
+  full_name: string;
   gender: Gender;
   date_of_birth: string;
   relation: Relation;
@@ -55,7 +55,7 @@ export default function ProfileFormPage() {
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      name: "",
+      full_name: "",
       gender: "MALE",
       date_of_birth: "",
       relation: hasSelfProfile ? "SPOUSE" : "SELF",
@@ -66,8 +66,8 @@ export default function ProfileFormPage() {
   // Populate form when editing
   React.useEffect(() => {
     if (profile) {
-      setValue("name", profile.name);
-      setValue("gender", profile.gender);
+      setValue("full_name", profile.full_name);
+      setValue("gender", profile.gender || "MALE");
       setValue(
         "date_of_birth",
         profile.date_of_birth ? profile.date_of_birth.split("T")[0] : ""
@@ -83,14 +83,20 @@ export default function ProfileFormPage() {
     if (isEditing && profileId) {
       // When editing, we can't change user_type after first booking
       const updateData: ProfileUpdate = {
-        name: data.name,
+        full_name: data.full_name,
         gender: data.gender,
-        date_of_birth: data.date_of_birth,
+        date_of_birth: data.date_of_birth || undefined,
         relation: data.relation,
       };
       await updateMutation.mutateAsync({ id: profileId, data: updateData });
     } else {
-      const createData: ProfileCreate = data;
+      const createData: ProfileCreate = {
+        full_name: data.full_name,
+        gender: data.gender || undefined,
+        date_of_birth: data.date_of_birth || undefined,
+        relation: data.relation || undefined,
+        user_type: data.user_type,
+      };
       await createMutation.mutateAsync(createData);
       analytics.profileCreated(data.relation, data.user_type);
     }
@@ -106,7 +112,7 @@ export default function ProfileFormPage() {
     );
   }
 
-  const isUserTypeLocked = isEditing && profile;
+  const isUserTypeLocked = isEditing && profile?.user_type_locked;
 
   return (
     <MobileLayout title={isEditing ? "Edit Profile" : "Add Profile"} showBack>
@@ -118,20 +124,20 @@ export default function ProfileFormPage() {
           <CardContent className="space-y-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
+              <Label htmlFor="full_name">Full Name *</Label>
               <Input
-                id="name"
+                id="full_name"
                 placeholder="Enter full name"
-                {...register("name", { required: "Name is required" })}
+                {...register("full_name", { required: "Full name is required" })}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
+              {errors.full_name && (
+                <p className="text-sm text-destructive">{errors.full_name.message}</p>
               )}
             </div>
 
             {/* Gender */}
             <div className="space-y-2">
-              <Label>Gender *</Label>
+              <Label>Gender</Label>
               <Select
                 value={watch("gender")}
                 onValueChange={(value: Gender) => setValue("gender", value)}
@@ -149,11 +155,10 @@ export default function ProfileFormPage() {
 
             {/* Date of Birth */}
             <div className="space-y-2">
-              <Label htmlFor="dob">Date of Birth *</Label>
+              <Label htmlFor="dob">Date of Birth</Label>
               <Controller
                 name="date_of_birth"
                 control={control}
-                rules={{ required: "Date of birth is required" }}
                 render={({ field }) => (
                   <Input
                     id="dob"
@@ -164,14 +169,11 @@ export default function ProfileFormPage() {
                   />
                 )}
               />
-              {errors.date_of_birth && (
-                <p className="text-sm text-destructive">{errors.date_of_birth.message}</p>
-              )}
             </div>
 
             {/* Relation */}
             <div className="space-y-2">
-              <Label>Relation *</Label>
+              <Label>Relation</Label>
               <Select
                 value={watch("relation")}
                 onValueChange={(value: Relation) => setValue("relation", value)}
@@ -207,7 +209,7 @@ export default function ProfileFormPage() {
                   Patient type cannot be changed after booking
                 </span>
                 <Badge variant="outline" className="ml-auto">
-                  {profile.user_type}
+                  {profile?.user_type}
                 </Badge>
               </div>
             ) : (

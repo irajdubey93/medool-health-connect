@@ -100,12 +100,12 @@ export default function AddressListPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      {labelIcons[address.label] || <MapPin className="h-5 w-5 text-primary" />}
+                      {labelIcons[address.label || ""] || <MapPin className="h-5 w-5 text-primary" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">{address.label}</span>
+                        <span className="font-semibold">{address.label || "Address"}</span>
                         {address.is_default && (
                           <Badge variant="outline" className="text-xs bg-primary/10 text-primary">
                             <Star className="h-3 w-3 mr-1 fill-primary" />
@@ -114,12 +114,15 @@ export default function AddressListPage() {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">
-                        {address.address_line}
+                        {address.address_line1}
+                        {address.address_line2 && `, ${address.address_line2}`}
                         {address.landmark && `, ${address.landmark}`}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {address.city}, {address.state} - {address.pincode}
-                      </p>
+                      {address.pincode && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Pincode: {address.pincode}
+                        </p>
+                      )}
                     </div>
 
                     <DropdownMenu>

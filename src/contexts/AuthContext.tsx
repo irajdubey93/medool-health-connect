@@ -28,7 +28,6 @@ import type {
   AuthTokens,
   OTPRequest,
   OTPResponse,
-  OTPVerify,
 } from "@/types/api";
 
 interface AuthContextValue {
@@ -134,11 +133,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return response;
   }, []);
 
-  // Verify OTP
+  // Verify OTP - NO purpose field as per backend spec
   const verifyOTP = useCallback(
     async (phone: string, otp: string): Promise<void> => {
-      const request: OTPVerify = { phone, otp, purpose: "LOGIN" };
-      const response = await api.post<AuthTokens>("/auth/verify-otp", request);
+      const response = await api.post<AuthTokens>("/auth/verify-otp", {
+        phone,
+        otp,
+      });
 
       // Store tokens
       setAccessToken(response.access_token, response.expires_in);
@@ -157,11 +158,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadUserData, profiles.length]
   );
 
-  // Logout
+  // Logout - send refresh_token to backend
   const logout = useCallback(async () => {
     try {
-      // Notify backend
-      await api.post("/auth/logout");
+      const refreshToken = await getRefreshToken();
+      if (refreshToken) {
+        await api.post("/auth/logout", { refresh_token: refreshToken });
+      }
     } catch {
       // Ignore logout errors - clear local state anyway
     }

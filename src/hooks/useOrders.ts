@@ -8,8 +8,10 @@ import { api } from "@/lib/api-client";
 import type {
   Order,
   OrderCreateRequest,
+  OrderCreateResponse,
   OrderCancelRequest,
-  PaginatedResponse,
+  OrderListResponse,
+  OrderListItem,
   OrderStatus,
 } from "@/types/api";
 import { toast } from "sonner";
@@ -27,8 +29,17 @@ interface OrdersParams {
 export function useOrders(params: OrdersParams = {}) {
   return useQuery({
     queryKey: [...ORDERS_QUERY_KEY, params],
-    queryFn: () =>
-      api.get<PaginatedResponse<Order>>("/orders", params as Record<string, unknown>),
+    queryFn: async () => {
+      const response = await api.get<OrderListResponse>("/orders", params as Record<string, unknown>);
+      // Normalize to expected format for UI components
+      return {
+        items: response.orders || [],
+        total: response.total || 0,
+        limit: params.limit || 20,
+        offset: params.offset || 0,
+        has_more: (response.orders?.length || 0) >= (params.limit || 20),
+      };
+    },
   });
 }
 
@@ -61,10 +72,10 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: OrderCreateRequest) => api.post<Order>("/orders", data),
+    mutationFn: (data: OrderCreateRequest) => api.post<OrderCreateResponse>("/orders", data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
-      analytics.orderPlaced(data.id, data.final_price_paise);
+      // Note: OrderCreateResponse returns order_id, not full order
       toast.success("Order placed successfully!");
     },
     onError: (error: Error) => {
