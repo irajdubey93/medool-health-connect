@@ -13,7 +13,7 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { analytics } from "@/lib/analytics";
 import type { CartItem, Test } from "@/types/api";
 
