@@ -160,7 +160,17 @@ apiClient.interceptors.response.use(
     // Parse API error envelope
     if (error.response?.data?.error) {
       const apiError = error.response.data.error;
-      const message = getErrorMessage(apiError.code);
+      
+      // For validation errors, include the details in the message
+      let message: string;
+      if (apiError.code === "validation_error" && apiError.details) {
+        // Import dynamically to avoid circular dependency issues at module load
+        const { formatValidationError } = await import("./error-messages");
+        message = formatValidationError(apiError.details);
+      } else {
+        message = getErrorMessage(apiError.code);
+      }
+      
       const customError = new Error(message) as Error & {
         code: string;
         details?: Record<string, string[]>;
