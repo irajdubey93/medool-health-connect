@@ -13,6 +13,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { OfflineIndicator } from "@/components/ui/offline-indicator";
+import { InstallBanner } from "@/components/ui/install-banner";
 import {
   FileImage,
   Search,
@@ -37,6 +39,8 @@ export default function HomePage() {
 
   return (
     <MobileLayout>
+      <OfflineIndicator />
+      <InstallBanner />
       {/* Hero section with gradient */}
       <div className="bg-gradient-primary px-6 pt-6 pb-10">
         <div className="flex items-center justify-between mb-6">

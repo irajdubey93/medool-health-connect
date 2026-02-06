@@ -12,6 +12,19 @@ import { useEffect } from "react";
 // Pages
 import LoginPage from "@/pages/LoginPage";
 import HomePage from "@/pages/HomePage";
+import ProfileListPage from "@/pages/ProfileListPage";
+import ProfileFormPage from "@/pages/ProfileFormPage";
+import AddressListPage from "@/pages/AddressListPage";
+import AddressFormPage from "@/pages/AddressFormPage";
+import TestSearchPage from "@/pages/TestSearchPage";
+import TestDetailPage from "@/pages/TestDetailPage";
+import CartPage from "@/pages/CartPage";
+import PrescriptionUploadPage from "@/pages/PrescriptionUploadPage";
+import PrescriptionListPage from "@/pages/PrescriptionListPage";
+import PrescriptionDetailPage from "@/pages/PrescriptionDetailPage";
+import CheckoutPage from "@/pages/CheckoutPage";
+import OrdersListPage from "@/pages/OrdersListPage";
+import OrderDetailPage from "@/pages/OrderDetailPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -54,20 +67,12 @@ const App = () => (
                 }
               />
 
-              {/* Placeholder routes - will be implemented */}
+              {/* Profile routes */}
               <Route
-                path="/search"
+                path="/profiles"
                 element={
                   <ProtectedRoute>
-                    <PlaceholderPage title="Search Tests" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <PlaceholderPage title="Orders" />
+                    <ProfileListPage />
                   </ProtectedRoute>
                 }
               />
@@ -75,23 +80,131 @@ const App = () => (
                 path="/profile"
                 element={
                   <ProtectedRoute>
-                    <PlaceholderPage title="Profile" />
+                    <ProfileListPage />
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/profile/new"
+                element={
+                  <ProtectedRoute>
+                    <ProfileFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/:profileId/edit"
+                element={
+                  <ProtectedRoute>
+                    <ProfileFormPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Address routes */}
+              <Route
+                path="/addresses"
+                element={
+                  <ProtectedRoute>
+                    <AddressListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/address/new"
+                element={
+                  <ProtectedRoute>
+                    <AddressFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/address/:addressId/edit"
+                element={
+                  <ProtectedRoute>
+                    <AddressFormPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Test catalog routes */}
+              <Route
+                path="/search"
+                element={
+                  <ProtectedRoute>
+                    <TestSearchPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/test/:testId"
+                element={
+                  <ProtectedRoute>
+                    <TestDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Cart */}
               <Route
                 path="/cart"
                 element={
                   <ProtectedRoute>
-                    <PlaceholderPage title="Cart" />
+                    <CartPage />
                   </ProtectedRoute>
                 }
               />
+
+              {/* Prescription routes */}
               <Route
                 path="/prescription/upload"
                 element={
                   <ProtectedRoute>
-                    <PlaceholderPage title="Upload Prescription" />
+                    <PrescriptionUploadPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/prescriptions"
+                element={
+                  <ProtectedRoute>
+                    <PrescriptionListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/prescriptions/:prescriptionId"
+                element={
+                  <ProtectedRoute>
+                    <PrescriptionDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Checkout */}
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <CheckoutPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Order routes */}
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute>
+                    <OrdersListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders/:orderId"
+                element={
+                  <ProtectedRoute>
+                    <OrderDetailPage />
                   </ProtectedRoute>
                 }
               />
@@ -105,15 +218,5 @@ const App = () => (
     </AuthProvider>
   </QueryClientProvider>
 );
-
-// Temporary placeholder for routes not yet implemented
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-      <h1 className="text-2xl font-bold mb-2">{title}</h1>
-      <p className="text-muted-foreground">Coming soon...</p>
-    </div>
-  );
-}
 
 export default App;
